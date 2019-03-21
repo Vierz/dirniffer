@@ -1,0 +1,34 @@
+#!/bin/bash
+
+
+# Use: dirniffer url wordlist
+
+
+lista="$2"
+ROBOTS=$(curl -sI --url $1/robots.txt | grep HTTP | awk '{print $2}')
+
+if [ $ROBOTS -eq 200 ]
+  then
+    printf "\n"
+    printf "Disallowed directories in robots.txt\n"
+    printf "\n"
+    curl -s --url $1/robots.txt | grep Disallow | awk '{print $2}'
+  else
+    quit
+fi
+
+printf "\n"
+printf "Found directories using $2\n"
+printf "\n"
+
+while read -r linea; do
+  directorio="$linea"
+
+paste \
+<(curl -sI --url $1/$directorio | grep HTTP | awk '{if($2 == "200")print $2}') \
+<(printf %s "$directorio") \
+| grep 200 | awk '{print "/"$2"/"}'
+
+done < "$lista"
+
+printf "\n"
